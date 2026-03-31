@@ -31,6 +31,8 @@ const Canvas: React.FC<CanvasProps> = ({
     ctx.fillRect(0, 0, width, height);
 
     const handleMouseDown = (e: MouseEvent) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -41,6 +43,11 @@ const Canvas: React.FC<CanvasProps> = ({
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDrawing) return;
+
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
