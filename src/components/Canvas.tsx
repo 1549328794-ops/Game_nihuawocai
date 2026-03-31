@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 
 interface CanvasProps {
   width?: number;
@@ -29,52 +29,57 @@ const Canvas: React.FC<CanvasProps> = ({
     // 设置画布背景
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
+  }, [width, height]);
 
-    const handleMouseDown = (e: MouseEvent) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+  const handleMouseDown = useCallback((e: MouseEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-      setIsDrawing(true);
-      setLastPosition({ x, y });
-    };
+    setIsDrawing(true);
+    setLastPosition({ x, y });
+  }, []);
 
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDrawing) return;
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDrawing) return;
 
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-      // 设置绘图样式
-      ctx.strokeStyle = isEraser ? '#ffffff' : color;
-      ctx.lineWidth = isEraser ? lineWidth * 2 : lineWidth;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
+    // 设置绘图样式
+    ctx.strokeStyle = isEraser ? '#ffffff' : color;
+    ctx.lineWidth = isEraser ? lineWidth * 2 : lineWidth;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
-      // 绘制线条
-      ctx.beginPath();
-      ctx.moveTo(lastPosition.x, lastPosition.y);
-      ctx.lineTo(x, y);
-      ctx.stroke();
+    // 绘制线条
+    ctx.beginPath();
+    ctx.moveTo(lastPosition.x, lastPosition.y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
 
-      setLastPosition({ x, y });
-    };
+    setLastPosition({ x, y });
+  }, [isDrawing, lastPosition, color, lineWidth, isEraser]);
 
-    const handleMouseUp = () => {
-      setIsDrawing(false);
-    };
+  const handleMouseUp = useCallback(() => {
+    setIsDrawing(false);
+  }, []);
 
-    const handleMouseLeave = () => {
-      setIsDrawing(false);
-    };
+  const handleMouseLeave = useCallback(() => {
+    setIsDrawing(false);
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
     // 添加事件监听器
     canvas.addEventListener('mousedown', handleMouseDown);
@@ -89,7 +94,7 @@ const Canvas: React.FC<CanvasProps> = ({
       canvas.removeEventListener('mouseup', handleMouseUp);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [width, height, color, lineWidth, isEraser, isDrawing, lastPosition]);
+  }, [handleMouseDown, handleMouseMove, handleMouseUp, handleMouseLeave]);
 
   const clearCanvas = () => {
     const canvas = canvasRef.current;
