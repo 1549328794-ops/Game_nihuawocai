@@ -8,7 +8,7 @@ interface CanvasProps {
   isEraser?: boolean;
 }
 
-const Canvas: React.FC<CanvasProps>= ({
+const Canvas: React.FC<CanvasProps> = ({
   width = 600,
   height = 400,
   color = '#000000',
@@ -17,7 +17,6 @@ const Canvas: React.FC<CanvasProps>= ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -34,12 +33,15 @@ const Canvas: React.FC<CanvasProps>= ({
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
+
       setIsDrawing(true);
-      setLastPosition({ x, y });
-      
+
       ctx.beginPath();
       ctx.moveTo(x, y);
+      ctx.strokeStyle = isEraser ? '#ffffff' : color;
+      ctx.lineWidth = isEraser ? lineWidth * 2 : lineWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -49,15 +51,8 @@ const Canvas: React.FC<CanvasProps>= ({
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
-      ctx.strokeStyle = isEraser ? '#ffffff' : color;
-      ctx.lineWidth = isEraser ? lineWidth * 2 : lineWidth;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
       ctx.lineTo(x, y);
       ctx.stroke();
-
-      setLastPosition({ x, y });
     };
 
     const handleMouseUp = () => {
@@ -81,7 +76,7 @@ const Canvas: React.FC<CanvasProps>= ({
       canvas.removeEventListener('mouseup', handleMouseUp);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [width, height, color, lineWidth, isEraser, isDrawing]);
+  }, [width, height, color, lineWidth, isEraser]);
 
   const clearCanvas = () => {
     const canvas = canvasRef.current;
@@ -106,38 +101,38 @@ const Canvas: React.FC<CanvasProps>= ({
   };
 
   return (<div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-      }}><canvas
-        ref={canvasRef}
-        width={width}
-        height={height}
-        style={{
-          border: '1px solid #ccc',
-          borderRadius: '8px',
-          backgroundColor: '#ffffff',
-          cursor: isDrawing ? 'crosshair' : 'default'
-        }}
-      /><div style={{
-          marginTop: '1rem',
-          display: 'flex',
-          gap: '1rem'
-        }}><button onClick={clearCanvas} style={{
-            padding: '0.5rem 1rem',
-            backgroundColor: '#f9f9f9',
-            color: '#213547',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}>清除</button><button onClick={saveCanvas} style={{
-            padding: '0.5rem 1rem',
-            backgroundColor: '#f9f9f9',
-            color: '#213547',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}>保存</button></div></div>);
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center'
+  }}><canvas
+      ref={canvasRef}
+      width={width}
+      height={height}
+      style={{
+        border: '1px solid #ccc',
+        borderRadius: '8px',
+        backgroundColor: '#ffffff',
+        cursor: isDrawing ? 'crosshair' : 'default'
+      }}
+    /><div style={{
+      marginTop: '1rem',
+      display: 'flex',
+      gap: '1rem'
+    }}><button onClick={clearCanvas} style={{
+      padding: '0.5rem 1rem',
+      backgroundColor: '#f9f9f9',
+      color: '#213547',
+      border: '1px solid #ddd',
+      borderRadius: '4px',
+      cursor: 'pointer'
+    }}>清除</button><button onClick={saveCanvas} style={{
+      padding: '0.5rem 1rem',
+      backgroundColor: '#f9f9f9',
+      color: '#213547',
+      border: '1px solid #ddd',
+      borderRadius: '4px',
+      cursor: 'pointer'
+    }}>保存</button></div></div>);
 };
 
 export default Canvas;
