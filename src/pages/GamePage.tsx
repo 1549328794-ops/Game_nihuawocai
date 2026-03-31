@@ -28,43 +28,56 @@ const GamePage: React.FC = () => {
       // 获取画布数据
       const dataURL = canvas.toDataURL('image/png');
 
-      // 调用豆包图像理解API
-      const response = await axios.post(
-        'https://open.doubao.com/api/chat/completions',
+      // 获取画布数据并转换为base64（去掉data:image/png;base64,前缀）
+      const base64Image = dataURL.replace(/^data:image\/png;base64,/, '');
+
+      // 1. 获取百度文心一言的access_token
+      const tokenResponse = await axios.post(
+        'https://aip.baidubce.com/oauth/2.0/token',
+        null,
         {
-          model: 'Doubao-Seed-2.0-lite',
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'text',
-                  text: '请识别这幅手绘图像中的内容，用简短的中文描述它是什么物体或场景。'
-                },
-                {
-                  type: 'image_url',
-                  image_url: {
-                    url: dataURL
-                  }
-                }
-              ]
-            }
-          ],
-          max_tokens: 100
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_DOUBAN_API_KEY}`,
-            'Content-Type': 'application/json'
+          params: {
+            grant_type: 'client_credentials',
+            client_id: import.meta.env.VITE_BAIDU_API_KEY,
+            client_secret: import.meta.env.VITE_BAIDU_SECRET_KEY
           }
         }
       );
 
-      const aiResponse = response.data.choices[0].message.content;
-      setAiResult(`豆包猜测：${aiResponse}`);
+      const accessToken = tokenResponse.data.access_token;
+
+      // 2. 调用百度图像识别API
+      const imageResponse = await axios.post(
+        'https://aip.baidubce.com/rest/2.0/image-classify/v2/advanced_general',
+        {
+          image: base64Image
+        },
+        {
+          params: {
+            access_token: accessToken
+          },
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }
+      );
+
+      // 解析结果
+      const result = imageResponse.data;
+      if (result.result && result.result.length > 0) {
+        const topResult = result.result[0];
+        setAiResult(`文心一言猜测：${topResult.keyword}（置信度：${(topResult.score * 100).toFixed(2)}%）`);
+      } else {
+        setAiResult('文心一言无法识别图像内容');
+      }
     } catch (error) {
       console.error('AI猜测失败:', error);
-      setAiResult('豆包猜测失败，请检查API密钥是否正确');
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.error_msg || error.message || '未知错误';
+        setAiResult(`文心一言猜测失败：${errorMessage}`);
+      } else {
+        setAiResult(`文心一言猜测失败：${error instanceof Error ? error.message : '未知错误'}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -139,7 +152,7 @@ const GamePage: React.FC = () => {
               onClick={handleAiGuess}
               disabled={isLoading}
             >
-              {isLoading ? 'AI思考中...' : 'AI猜测'}
+              {isLoading ? '文心一言思考中...' : '文心一言猜测'}
             </button>
           </div>
 
