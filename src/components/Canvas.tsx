@@ -17,6 +17,7 @@ const Canvas: React.FC<CanvasProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -35,9 +36,7 @@ const Canvas: React.FC<CanvasProps> = ({
       const y = e.clientY - rect.top;
 
       setIsDrawing(true);
-
-      ctx.beginPath();
-      ctx.moveTo(x, y);
+      setLastPosition({ x, y });
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -47,14 +46,19 @@ const Canvas: React.FC<CanvasProps> = ({
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
-      // 在每次移动时设置样式，确保使用最新的props值
+      // 设置绘图样式
       ctx.strokeStyle = isEraser ? '#ffffff' : color;
       ctx.lineWidth = isEraser ? lineWidth * 2 : lineWidth;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
+      // 绘制线条
+      ctx.beginPath();
+      ctx.moveTo(lastPosition.x, lastPosition.y);
       ctx.lineTo(x, y);
       ctx.stroke();
+
+      setLastPosition({ x, y });
     };
 
     const handleMouseUp = () => {
@@ -78,7 +82,7 @@ const Canvas: React.FC<CanvasProps> = ({
       canvas.removeEventListener('mouseup', handleMouseUp);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [width, height]);
+  }, [width, height, color, lineWidth, isEraser, isDrawing, lastPosition]);
 
   const clearCanvas = () => {
     const canvas = canvasRef.current;
