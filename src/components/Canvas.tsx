@@ -38,10 +38,6 @@ const Canvas: React.FC<CanvasProps> = ({
 
       ctx.beginPath();
       ctx.moveTo(x, y);
-      ctx.strokeStyle = isEraser ? '#ffffff' : color;
-      ctx.lineWidth = isEraser ? lineWidth * 2 : lineWidth;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -50,6 +46,12 @@ const Canvas: React.FC<CanvasProps> = ({
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
+
+      // 在每次移动时设置样式，确保使用最新的props值
+      ctx.strokeStyle = isEraser ? '#ffffff' : color;
+      ctx.lineWidth = isEraser ? lineWidth * 2 : lineWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
 
       ctx.lineTo(x, y);
       ctx.stroke();
@@ -76,7 +78,7 @@ const Canvas: React.FC<CanvasProps> = ({
       canvas.removeEventListener('mouseup', handleMouseUp);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [width, height, color, lineWidth, isEraser]);
+  }, [width, height]);
 
   const clearCanvas = () => {
     const canvas = canvasRef.current;
