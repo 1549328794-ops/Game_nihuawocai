@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import Canvas from '../components/Canvas';
+import axios from 'axios';
 
 interface CanvasHandle {
   getCanvas: () => HTMLCanvasElement | null;
@@ -24,31 +25,46 @@ const GamePage: React.FC = () => {
         throw new Error('无法获取画布');
       }
 
-      // 获取画布数据（在真实项目中，这里会将数据发送给AI API）
+      // 获取画布数据
       const dataURL = canvas.toDataURL('image/png');
-      console.log('画布数据:', dataURL.substring(0, 100) + '...');
 
-      // 模拟AI猜测功能（实际项目中需要调用真实的AI API）
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // 调用OpenAI Vision API
+      const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: '请识别这幅手绘图像中的内容，用简短的中文描述它是什么物体或场景。'
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: dataURL
+                  }
+                }
+              ]
+            }
+          ],
+          max_tokens: 100
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-      // 示例结果 - 在真实项目中应替换为实际的AI响应
-      const guesses = [
-        '一只可爱的小猫',
-        '一辆红色的汽车',
-        '一座美丽的房子',
-        '一只飞翔的小鸟',
-        '一朵盛开的花朵',
-        '一个笑脸',
-        '一个太阳',
-        '一颗星星',
-        '一只蝴蝶',
-        '一艘船'
-      ];
-
-      const randomGuess = guesses[Math.floor(Math.random() * guesses.length)];
-      setAiResult(`AI猜测：${randomGuess}`);
+      const aiResponse = response.data.choices[0].message.content;
+      setAiResult(`AI猜测：${aiResponse}`);
     } catch (error) {
-      setAiResult('AI猜测失败，请重试');
+      console.error('AI猜测失败:', error);
+      setAiResult('AI猜测失败，请检查API密钥是否正确');
     } finally {
       setIsLoading(false);
     }
