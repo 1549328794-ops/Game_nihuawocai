@@ -32,7 +32,7 @@ const GamePage: React.FC = () => {
       const response = await axios.post(
         'https://open.doubao.com/api/chat/completions',
         {
-          model: 'doubao-1.0-pro',
+          model: 'Doubao-Seed-2.0-lite',
           messages: [
             {
               role: 'user',
