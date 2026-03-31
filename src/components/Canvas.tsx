@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, forwardRef, useImperativeHandle, useRef } from 'react';
 
 interface CanvasProps {
   width?: number;
@@ -8,14 +8,22 @@ interface CanvasProps {
   isEraser?: boolean;
 }
 
-const Canvas: React.FC<CanvasProps> = ({
+interface CanvasHandle {
+  getCanvas: () => HTMLCanvasElement | null;
+}
+
+const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
   width = 600,
   height = 400,
   color = '#000000',
   lineWidth = 5,
   isEraser = false
-}) => {
+}, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    getCanvas: () => canvasRef.current
+  }));
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
 
@@ -151,6 +159,6 @@ const Canvas: React.FC<CanvasProps> = ({
       borderRadius: '4px',
       cursor: 'pointer'
     }}>保存</button></div></div>);
-};
+});
 
 export default Canvas;
